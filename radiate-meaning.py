@@ -1,7 +1,16 @@
 import RPi.GPIO as GPIO
 import speech_recognition as sr
 import sounddevice
+import random
 
+# MPR121
+# import board
+# import busio
+# import adafruit_mpr121
+# i2c = busio.I2C(board.SCL, board.SDA)
+# mpr121 = adafruit_mpr121.MPR121(i2c)
+
+# NLP, audio
 import nltk
 from nltk.corpus import wordnet as wn
 
@@ -40,6 +49,7 @@ pygame.init()
 GPIO.setwarnings(False) # Ignore warnings for now 
 GPIO.setmode(GPIO.BCM) # BCM vs Board 
 GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(17, GPIO.OUT)
 
 form_1 = pyaudio.paInt16 # 16-bit resolution
 chans = 1 # 1 channel
@@ -93,10 +103,12 @@ def overplay(sentences, factor=0.9):
     pygame_sound = pygame.mixer.Sound(files[idx])
 
     pygame.mixer.Sound.play(pygame_sound)
+    GPIO.output(17, GPIO.HIGH)
 
     length = pygame_sound.get_length()
     time.sleep(length*factor)
     factor = factor / ((idx*0.55)+1)
+    GPIO.output(17, GPIO.LOW)
 
 
   time.sleep(length+1)
@@ -250,6 +262,7 @@ def recordAudio():
                       input = True, \
                       frames_per_buffer=chunk)
   print("Listening.")
+  GPIO.output(17, GPIO.HIGH)
 
   frames = []
 
@@ -259,6 +272,7 @@ def recordAudio():
       frames.append(data)
 
   print("Stopped listening.")
+  GPIO.output(17, GPIO.LOW)
 
   # stop the stream, close it, and terminate the pyaudio instantiation
   stream.stop_stream()
@@ -283,19 +297,32 @@ def audioToText():
 
   # open the file
   with sr.AudioFile(filename) as source:
-      # listen for the data (load audio to memory)
-      audio_data = r.record(source)
-      # recognize (convert from speech to text)
-      heard_text = r.recognize_google(audio_data)
-      print(heard_text)
+    # listen for the data (load audio to memory)
+    audio_data = r.record(source)
+    # recognize (convert from speech to text)
+    heard_text = r.recognize_google(audio_data)
+    print(heard_text)
 
-  overplay(repronounce(heard_text))
-  overplay(remean(heard_text))
+  choice = random.randint(0,2)
+  if(choice == 0):
+    overplay(repronounce(heard_text))
+  else:
+    overplay(remean(heard_text))
 
 
 while True:
+  # if mpr121[5].value:
+  #   print("Pin 0 touched!")
+  GPIO.output(17, GPIO.HIGH)
+  time.sleep(0.5)
+  GPIO.output(17, GPIO.LOW)
+  time.sleep(1.5)
+
   if GPIO.input(26) == GPIO.LOW:
-    recordAudio()
+    try:
+      recordAudio()
+    except:
+      pass  
 
     # add sleep to make sure file has time to save before code runs
     time.sleep(0.5)
