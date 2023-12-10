@@ -3,13 +3,6 @@ import speech_recognition as sr
 import sounddevice
 import random
 
-# MPR121
-# import board
-# import busio
-# import adafruit_mpr121
-# i2c = busio.I2C(board.SCL, board.SDA)
-# mpr121 = adafruit_mpr121.MPR121(i2c)
-
 # NLP, audio
 import nltk
 from nltk.corpus import wordnet as wn
@@ -311,8 +304,6 @@ def audioToText():
 
 
 while True:
-  # if mpr121[5].value:
-  #   print("Pin 0 touched!")
   GPIO.output(17, GPIO.HIGH)
   time.sleep(0.5)
   GPIO.output(17, GPIO.LOW)
