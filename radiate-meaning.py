@@ -25,6 +25,7 @@ import re           # to pattern-match and replace punctuation
 import random       # to choose from lists of synonyms and rhymes
 import spacy        # to get parts of speech
 import string       # to get punctuation
+import sys     # to exit record loop when nothing recorded
 import time         # to sleep
 
 
@@ -34,6 +35,7 @@ punctuation = string.punctuation # load punctuation
 
 from pygame import mixer
 from pydub import AudioSegment
+from pydub.playback import play
 
 pygame.mixer.pre_init(24000, 8, 1, 256)
 pygame.init()
@@ -177,7 +179,7 @@ def remean(txt):
   sentences = []
   newwords = []
 
-  words = nltk.word_tokenize(txt.lower())
+  words = nltk.word_tokenize(txt)
   doc = nlp(txt)
 
   # add the original sentence to sentences — I used this previously to match the formatting of all the other sentences.
@@ -215,7 +217,7 @@ def remean(txt):
         if (syntok.pos_ == token.pos_):
           syntok_inflected = syntok._.inflect(token.tag_)
 
-          if (syntok_inflected != None) and (syntok_inflected != token.text):
+          if (syntok_inflected != None) and (syntok_inflected.lower() != token.text):
             syns_with_correct_inflection.append(syntok_inflected)
 
     # if list not empty, pick a random synonym
@@ -292,15 +294,28 @@ def audioToText():
   with sr.AudioFile(filename) as source:
     # listen for the data (load audio to memory)
     audio_data = r.record(source)
-    # recognize (convert from speech to text)
-    heard_text = r.recognize_google(audio_data)
-    print(heard_text)
 
-  choice = random.randint(0,2)
-  if(choice == 0):
-    overplay(repronounce(heard_text))
-  else:
-    overplay(remean(heard_text))
+    try:
+      # recognize (convert from speech to text)
+      heard_text = r.recognize_google(audio_data)
+      print(heard_text.lower())
+
+      choice = random.randint(0,2)
+      if(choice == 0):
+        overplay(repronounce(heard_text.lower()))
+      else:
+        overplay(remean(heard_text.lower()))
+
+    except Exception as e:
+      tts = gTTS("i didn't hear", lang='en', tld='co.in', slow=False) #Provide the string to convert to speech
+      tts.save('silence.wav')
+      
+      #save string converted to speech as .wav file (it's actually MPEG Audio 2)
+      sound_file = AudioSegment.from_mp3('silence.wav') 
+      sound_file.export('silence.wav', format='wav')
+
+      silence = AudioSegment.from_wav("silence.wav")
+      play(silence)
 
 
 while True:
