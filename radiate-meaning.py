@@ -25,7 +25,6 @@ import re           # to pattern-match and replace punctuation
 import random       # to choose from lists of synonyms and rhymes
 import spacy        # to get parts of speech
 import string       # to get punctuation
-import sys     # to exit record loop when nothing recorded
 import time         # to sleep
 
 
@@ -321,8 +320,6 @@ def audioToText():
 while True:
   GPIO.output(17, GPIO.HIGH)
   time.sleep(0.5)
-  GPIO.output(17, GPIO.LOW)
-  time.sleep(1.5)
 
   if GPIO.input(26) == GPIO.LOW:
     try:
@@ -337,6 +334,8 @@ while True:
 
     time.sleep(0.5)
 
+  GPIO.output(17, GPIO.LOW)
+  time.sleep(0.75)
 
 message = input ("Press button and say something short. Press enter to quit. \n")
 GPIO.cleanup()
